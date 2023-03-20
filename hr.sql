@@ -136,32 +136,83 @@ ORDER BY
 
 
 -- 2004년도 고용된 사원들의 LAST_NAME, HIRE_DATE 조회, 고용일자 오름차순정렬 =>LIKE사용
-SELECT LAST_NAME, HIRE_DATE
-FROM EMPLOYEES
-WHERE HIRE_DATE LIKE '04%'
-ORDER BY HIRE_DATE;
+SELECT
+    last_name,
+    hire_date
+FROM
+    employees
+WHERE
+    hire_date LIKE '04%'
+ORDER BY
+    hire_date;
 
 -- LAST_NAME에 u가 포함된 사원들의 사번, LAST_NAME조회
-SELECT employee_id, LAST_NAME
-FROM EMPLOYEES
-WHERE LAST_NAME LIKE '%u%';
+SELECT
+    employee_id,
+    last_name
+FROM
+    employees
+WHERE
+    last_name LIKE '%u%';
 
 -- LAST_NAME의 네번째 글자가 a인 사원들의 LAST_NAME조회
-SELECT LAST_NAME
-FROM EMPLOYEES
-WHERE LAST_NAME LIKE '___a%';
+SELECT
+    last_name
+FROM
+    employees
+WHERE
+    last_name LIKE '___a%';
 
 -- LAST_NAME에 a혹은 e글자가 포함된 사원들의 LAST_NAME조회, 오름차순
-SELECT LAST_NAME
-FROM EMPLOYEES
-WHERE LAST_NAME LIKE '%a%' or LAST_NAME LIKE '%e%'
-order by last_name;
+SELECT
+    last_name
+FROM
+    employees
+WHERE
+    last_name LIKE '%a%'
+    OR last_name LIKE '%e%'
+ORDER BY
+    last_name;
 
 -- LAST_NAME에 a와 e글자가 포함된 사원들의 LAST_NAME조회, 오름차순
-SELECT LAST_NAME
-FROM EMPLOYEES
-WHERE LAST_NAME LIKE '%a%e%' or LAST_NAME LIKE '%e%a%' --LAST_NAME LIKE '%a%' and LAST_NAME LIKE '%e%'
-order by last_name;
+SELECT
+    last_name
+FROM
+    employees
+WHERE
+    last_name LIKE '%a%e%'
+    OR last_name LIKE '%e%a%' --LAST_NAME LIKE '%a%' and LAST_NAME LIKE '%e%'
+ORDER BY
+    last_name;
+
+-- 매니저가 없는 사람들의 last_name, job_id 조회
+SELECT
+    last_name,
+    job_id
+FROM
+    employees
+WHERE
+    manager_id IS NULL or manager_id='';
+
+-- job_id가 ST_CLERK인 사원 조회 (단, 부서번호가 NULL인 사원은 제외) -중복을 제거한 후 부서번호만 조회
+SELECT DISTINCT
+    department_id
+FROM
+    employees
+WHERE
+        job_id = 'ST_CLERK'
+    AND department_id IS NOT NULL;
+
+-- commission_pct가 null이 아닌 사원들 중에서 commission = salary * commission_pct 를 구하여 employee_id, first_name, job_id 출력
+SELECT
+    employee_id,
+    first_name,
+    job_id,
+    salary * commission_pct AS commission
+FROM
+    employees
+WHERE
+    commission_pct IS NOT NULL;
 
 
 

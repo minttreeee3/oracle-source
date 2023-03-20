@@ -77,8 +77,8 @@ FROM
 SELECT
     empno,
     ename,
-    SAL,
-    COMM,
+    sal,
+    comm,
     sal * 12 + comm AS annsal
 FROM
     emp;
@@ -213,6 +213,16 @@ WHERE
 -- IS NULL 연산자
 -- 집합연산자 : UNION(합집합-중복제거), UNION ALL(합집합-중복포함), MINUS(차집합), INTERSECT(교집합)
 
+-- 연산자 우선순위 
+-- 1) 산술연산자
+-- 2) 비교연산자
+-- 3) IS NULL, IS NOT NULL, LIKE, IN
+-- 4) BETWEEN A AND B
+-- 5) NOT
+-- 6) AND
+-- 7) OR
+-- 우선순위를 줘야 한다면 소괄호 사용
+
 
 -- EMP 테이블에서 급여 열에 12를 곱한 값이 36000인 행 조회
 SELECT
@@ -261,7 +271,7 @@ SELECT
 FROM
     emp
 WHERE
-    job IN('MANAGER','SALESMAN','CLERK');
+    job IN ( 'MANAGER', 'SALESMAN', 'CLERK' );
 
 -- JOB이 MANAGER,SALESMAN,CLERK이 아닌 사원 조회 => IN 연산자 사용
 SELECT
@@ -269,24 +279,39 @@ SELECT
 FROM
     emp
 WHERE
-    job NOT IN('MANAGER','SALESMAN','CLERK');
+    job NOT IN ( 'MANAGER', 'SALESMAN', 'CLERK' );
 
 -- 부서번호가 10, 20인 사원조회 => IN 사용
-SELECT * FROM EMP WHERE DEPTNO IN(10, 20);
+SELECT
+    *
+FROM
+    emp
+WHERE
+    deptno IN ( 10, 20 );
 
 -- 급여가 2000이상 3000이하인 사원 조회 
-SELECT *
-FROM EMP
-WHERE SAL >= 2000 AND SAL <=3000; 
+SELECT
+    *
+FROM
+    emp
+WHERE
+        sal >= 2000
+    AND sal <= 3000; 
 --BETWEEN A AND B 사용 
-SELECT *
-FROM EMP
-WHERE SAL BETWEEN 2000 AND 3000;
+SELECT
+    *
+FROM
+    emp
+WHERE
+    sal BETWEEN 2000 AND 3000;
 
 -- 급여가 2000 이상 3000이하가 아닌 사원
-SELECT *
-FROM EMP
-WHERE SAL NOT BETWEEN 2000 AND 3000;
+SELECT
+    *
+FROM
+    emp
+WHERE
+    sal NOT BETWEEN 2000 AND 3000;
 
 
 
@@ -296,31 +321,259 @@ WHERE SAL NOT BETWEEN 2000 AND 3000;
 -- % : 길이와 상관없이(문자없는 경우도 포함) 모든 문자 데이터를 의미 
 
 --사원이름이 S로 시작하는 사원정보 조회
-SELECT *
-FROM EMP
-WHERE ENAME LIKE 'S%';
+SELECT
+    *
+FROM
+    emp
+WHERE
+    ename LIKE 'S%';
 
 --사원이름의 두번째 글자가 L인 사원만 조회
-SELECT *
-FROM EMP
-WHERE ENAME LIKE '_L%';
+SELECT
+    *
+FROM
+    emp
+WHERE
+    ename LIKE '_L%';
 
 --사원이름에 AM이 포함된 사원만 조회
-SELECT *
-FROM EMP
-WHERE ENAME LIKE '%AM%';
+SELECT
+    *
+FROM
+    emp
+WHERE
+    ename LIKE '%AM%';
 
 --사원이름에 AM이 포함되지 않은 사원만 조회
-SELECT *
-FROM EMP
-WHERE ENAME NOT LIKE '%AM%';
+SELECT
+    *
+FROM
+    emp
+WHERE
+    ename NOT LIKE '%AM%';
 
 
 -- NULL : 데이터값이 완전히 비어 있는 상태
 -- =을 사용할 수 없음, IS를 사용
-SELECT * FROM EMP
-WHERE COMM IS NULL;
+SELECT
+    *
+FROM
+    emp
+WHERE
+    comm IS NULL;
 
 -- MGR이 NULL이 아닌 데이터
+SELECT
+    *
+FROM
+    emp
+WHERE
+    mgr IS NOT NULL;
+
+
+
+-- 집합연산자
+-- union(동일한 결과값인 경우 중복 제거), union all(중복 제거 안함) : 합집합
+-- 열의 갯수가 똑같아야함
+
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10
+UNION
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10;
+
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10
+UNION ALL
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10;
+
+-- MINUS(차집합) -위에서 아래꺼 제외
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+MINUS
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10;
+
+-- INTERSECT(교집합)
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+INTERSECT
+SELECT
+    empno,
+    ename,
+    sal,
+    deptno
+FROM
+    emp
+WHERE
+    deptno = 10;
+
+-- EMP 테이블에서 사원이름이 S로 끝나는 사원 데이터 조회
+SELECT *
+FROM emp
+WHERE ename LIKE '%S';
+
+-- EMP 테이블에서 30번 부서에 근무하는 사원 중에서 직책이 SALESMAN인 사원의 사원번호,이름,급여 조회 (SAL내림차순)
+SELECT empno, ename, sal
+FROM emp
+WHERE deptno = 30 AND job = 'SALESMAN'
+ORDER BY sal DESC;
+
+-- EMP 테이블을 사용하여 20,30번 부서에 근무하고 있는 사원 중 급여가 2000초과인 사원의 사원번호,이름,급여,부서번호 조회 (집합연산자 사용/사용X)
+SELECT empno,ename, sal,deptno
+FROM emp
+WHERE deptno IN ( 20, 30 ) AND sal > 2000;
+
+SELECT empno, ename, sal, deptno
+FROM emp
+WHERE deptno IN ( 20, 30 )
+INTERSECT
+SELECT empno, ename, sal, deptno
+FROM  emp
+WHERE sal > 2000;
+
+-- 사원이름에 E가 포함되어있는 30번부서 사원 중 급여가 1000~2000사이가 아닌 사원의 이름,사원번호,급여,부서번호 조회
+
+SELECT empno, ename, sal, deptno
+FROM emp
+WHERE ename LIKE '%E%' AND deptno = 30 AND sal NOT BETWEEN 1000 AND 2000;
+
+SELECT empno, ename, sal, deptno
+FROM emp
+WHERE ename LIKE '%E%' AND deptno = 30
+MINUS
+SELECT empno, ename, sal, deptno
+FROM emp
+WHERE sal BETWEEN 1000 AND 2000;
+
+-- 추가수당이 존재하지 않으며, 상급자가 있고 직책이 MANAGER,CLERK인 사원 중에서 사원이름의 두번째글자가 L이 아닌 사원의 정보조회
+SELECT *
+FROM emp
+WHERE 
+    comm IS NULL
+    AND mgr IS NOT NULL
+    AND job IN ( 'MANAGER', 'CLERK' )
+MINUS
+SELECT *
+FROM emp
+WHERE ename LIKE '_L%';
+
+
+
+-- 오라클 함수 
+-- 오라클에서 기본으로 제공하는 내장 함수와 사용자가 필요에 의해 직접 정의한 사용자 정의 함수 
+
+-- 문자열 함수
+-- 1. UPPER, LOWER, INITCAP
+-- UPPER: 모두 대문자, LOWER: 모두 소문자, INITCAP: 첫글자만 대문자
+-- 검색 시 모두 대문자OR소문자로 바꾼다음에 검색하면 찾기 편함
+SELECT ENAME, UPPER(ENAME), LOWER(ENAME), INITCAP(ENAME)
+FROM EMP;
+
 SELECT * FROM EMP
-WHERE MGR IS NOT NULL;
+WHERE UPPER(ENAME) = 'FORD';
+
+SELECT * FROM EMP
+WHERE UPPER(ENAME) LIKE UPPER('%FORD%');
+
+-- 2. LENGTH : 문자열 길이
+SELECT ENAME, LENGTH(ENAME)
+FROM EMP;
+
+-- 사원이름의 길이가 5이상인 사원조회
+SELECT * FROM EMP
+WHERE LENGTH(ENAME) >=5;
+
+-- 한글일 때 - length는 똑같이 글자수
+-- dual : sys가 소유하는 테이블(임시 연산이나 함수의 결과값을 확인하는 용도로 사용) 
+-- lengthb : 바이트수 (영어는 1byte, 한글은 3byte) 
+SELECT LENGTH('한글'), lengthb('한글'), lengthb('ab')
+FROM DUAL;
+
+-- 3. SUBSTR (문자열데이터, 시작위치, 추출길이) : 추출길이 생략가능 
+-- 문자열 일부 추출
+SELECT SUBSTR(JOB,1,3), SUBSTR(JOB,5), SUBSTR(JOB,-3)
+FROM EMP;
+
+-- ENAME, 세번째 글자부터 출력
+SELECT ENAME, SUBSTR(ENAME, 3)
+FROM EMP;
+
+-- 4. INSTR : 문자열 데이터 안에서 특정 문자 위치 찾기
+-- INSTR(대상문자열, 위치를 찾으려는 문자열, 찾기시작할 위치(선택), 시작위치에서 찾으려는 문자가 몇번째인지 지정(선택))
+
+-- HELLO, ORACLE! 문자열에서 L 문자열 찾기
+SELECT INSTR('HELLO, ORACLE!', 'L') AS INSTR_1, INSTR('HELLO, ORACLE!', 'L', 5) AS INSTR_2,INSTR('HELLO, ORACLE!', 'L', 2, 2) AS INSTR_3
+FROM DUAL;
+
+-- 5. REPLACE : 특정 문자를 다른 문자로 변경
+-- REPLACE(문자열데이터, 찾는문자, 변경문자)
+-- 010-1234-5678  -를 빈문자열로 변경 / -를 없애기
+SELECT '010-1234-5678' AS 변경전, REPLACE('010-1234-5678','-',' ') AS REPLACE_1, REPLACE('010-1234-5678','-') AS REPLACE_2
+FROM DUAL;
+
+-- '이것이 Oracle이다', '이것이'=>'This is' 변경
+select '이것이 Oracle이다' as 변경전, replace('이것이 Oracle이다', '이것이', 'This is') as replace
+from dual;
+
+
+-- 6. CONCAT : 두 문자열 데이터 합치기 (두개만 합칠수 있음) 
+SELECT CONCAT(EMPNO, ENAME)
+FROM EMP;
+
+SELECT CONCAT(EMPNO, CONCAT(':', ENAME))    --세개 합치려면
+FROM EMP;
+
+-- || : 문자열 연결 연산자 
+SELECT EMPNO || ':' || ENAME
+FROM EMP;
+
+-- 7. TRIM, LTRIM, RTRIM : 공백 포함 특정 문자 제거 (아무것도 안쓰면 공백제거) 
+SELECT '     이것이   ' , TRIM('     이것이   ')
+FROM DUAL;
