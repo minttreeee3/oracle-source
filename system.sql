@@ -15,11 +15,11 @@ ALTER SESSION SET "_ORACLE_SCRIPT" = true;
 -- GRANT : 권한 부여 (사용자 생성만 해서는 아무것도 할 수 없음) 
 GRANT connect, resource TO javadb;
 
-CREATE USER scott IDENTIFIED BY tiger
+CREATE USER SCOTT IDENTIFIED BY TIGER
 DEFAULT TABLESPACE users
 TEMPORARY TABLESPACE temp;
 
-GRANT connect, resource TO scott;
+GRANT connect, resource TO SCOTT;
 
 SELECT * FROM all_users;
 
