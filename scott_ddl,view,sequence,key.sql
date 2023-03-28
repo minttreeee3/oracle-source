@@ -193,6 +193,7 @@ WHERE ROWNUM <=3;
 
 -- 시퀀스 : 규칙에 따라 순번 생성
 -- CREATE SEQUENCE 시퀀스이름; (설정안하는 것들은 다 기본값으로 세팅)
+
 -- CREATE SEQUENCE 시퀀스명
 -- [INCREMENT BY 숫자]   --기본값1
 -- [START WITH 숫자]     --기본값1
