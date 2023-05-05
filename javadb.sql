@@ -38,9 +38,6 @@ select * from usertbl where username like '_길동%';
 
 
 
-
-
-
 -- 시퀀스 생성 (시퀀스는 테이블이랑 별개로 돌아가고있음)
 -- user_seq 생성(기본)
 
@@ -118,4 +115,177 @@ SELECT u.user_id, u.name, c.info, p.product_id, p.pname, p.price, p.content, o.o
 from suser u, paytype c, sorder o, product p 
 where u.pay_no=c.pay_no and u.user_id=o.user_id and o.product_id=p.product_id and u.user_id=1000;
 
+
+
+-- 도서 테이블
+-- code, title, writer, price
+-- code : 1001 (pk)
+-- title : '자바의 신'
+-- writer : '홍길동'
+-- price : 25000
+
+-- bookTBL 테이블생성
+create table booktbl(
+code number(4) primary key, --not null+unique
+title nvarchar2(50) not null,
+writer nvarchar2(20) not null,
+price number(8) not null
+);
+
+insert into booktbl(code, title, writer, price) values(1001, '이것이 자바다', '신용균', 25000);
+insert into booktbl(code, title, writer, price) values(1002, '자바의 신', '강신용', 25800);
+insert into booktbl(code, title, writer, price) values(1003, '오라클로 배우는 데이터베이스', '이지훈', 19000);
+insert into booktbl(code, title, writer, price) values(1004, '자바 1000제', '김용만', 30000);
+insert into booktbl(code, title, writer, price) values(1005, '자바 프로그래밍 입문', '박은종', 24000);
+
+
+alter table booktbl add description nvarchar2(100);
+
+commit;
+
+
+---------------------------------
+
+
+-- member 테이블
+-- userid (영어, 숫자, 특수문자) 최대12허용, pk 
+-- password (영어,숫자,특수문자) 최대15허용
+-- name (한글)
+-- gender (한글 - 남/여)
+-- email 
+
+create table membertbl (
+userid varchar2(15) primary key,
+password varchar2(20) not null,
+name nvarchar2(20) not null,
+gender nvarchar2(2) not null,
+email varchar2(50) not null
+);
+
+insert into membertbl values('hong123', 'hong123@', '홍길동', '남', 'hong123@gmail.com');
+
+
+
+--------------------------
+
+
+-- 게시판 board 
+-- 글번호(bno, 숫자, 시퀀스 삽입, pk(pk_board제약조건명), 작성자(name, 한글), 비밀번호(password, 숫자,영문자), 제목(title, 한글), 
+-- 내용(content, 한글), 파일첨부(attach, 파일명), 답변글 작성시 참조되는 글번호(re_ref, 숫자), 답변글 레벨(re_lev, 숫자), 
+-- 답변글 순서(re_seq, 숫자), 조회수(cnt, 숫자, default로 0지정), 작성날짜(regdate, defalut로 sysdate지정)
+
+
+create table board (
+bno number(8) constraint pk_board primary key,
+name nvarchar2(20) not null,
+password varchar2(20) not null,
+title nvarchar2(50) not null,
+content nvarchar2(2000) not null,
+attach nvarchar2(100),
+re_ref number(8) not null,
+re_lev number(8) not null,
+re_seq number(8) not null,
+cnt number(8) default 0,
+regdate date default sysdate
+);
+
+
+-- 시퀀스생성 board_seq 
+create sequence board_seq;
+
+
+
+-- 서브쿼리 ( 게시글 x2로 늘리기 )
+insert into board(bno, name, password, title, content, re_ref, re_lev, re_seq)
+(select board_seq.nextval, name, password, title, content, board_seq.currval, re_lev, re_seq from board);
+
+
+----------------- 댓글
+-- re_ref, re_lev, re_seq
+
+-- 원본글 작성 re_ref : bno값과 동일
+--            re_lev : 0, re_seq : 0
+
+select bno, title, re_ref, re_lev, re_seq from board where bno=4606;
+
+-- re_ref : 그룹번호
+-- re_seq : 그룹 내에서 댓글의 순서
+-- re_lev : 그룹 내에서 댓글의 깊이 (원본의 댓글인지? 댓글의 댓글인지?) 
+
+-- 댓글도 새글임 => insert작업
+--                bno : board_seq.nextval
+--                re_ref : 원본글의 re_ref값과 동일  (같은그룹이니까)
+--                re_seq : 원본글의 re_seq + 1
+--                re_lev : 원본글의 re_lev + 1
+
+-- 첫번째 댓글 작성
+insert into board(bno, name, password, title, content, attach, re_ref, re_lev, re_seq)
+values(board_seq.nextval, '김댓글', '12345', 'Re : 게시글', '게시글 댓글', null, 4606, 1, 1);
+
+commit;
+
+-- 가장 최신글과 댓글 가지고 오기 ( +re_seq asc : 댓글의 최신순으로 정렬) 
+select bno, title, re_ref, re_lev, re_seq from board where re_ref=4606 order by re_seq;
+
+
+-- 두번째 댓글 작성
+-- re_seq가 값이 작을수록 최신글임 (나중에 단 댓글이 위로 오도록) 
+
+-- 기존 댓글이 있는가? 따져서 기존댓글의 re_seq변경을(update) 한 후 insert작업을 해야함 
+-- update구문에서 where절은 re_ref는 원본글의 re_ref값, re_seq비교구문은 원본글의 re_seq값과 비교 
+-- 기존에있던 댓글들의 re_seq가 1씩 증가하게됨 
+update board set re_seq = re_seq + 1 where re_ref = 4606 and re_seq > 0;
+
+insert into board(bno, name, password, title, content, attach, re_ref, re_lev, re_seq)
+values(board_seq.nextval, '김댓글', '12345', 'Re : 게시글2', '게시글 댓글2', null, 4606, 1, 1);
+
+
+-- 댓글의 댓글 작성
+-- update / insert 
+-- 지금있는 원본글을 기준으로 
+update board set re_seq = re_seq + 1 where re_ref = 4606 and re_seq > 2;
+
+insert into board(bno, name, password, title, content, attach, re_ref, re_lev, re_seq)
+values(board_seq.nextval, '김댓글', '12345', 'ReRe : 게시글', '댓글의 댓글', null, 4606, 2, 3);
+
+
+--------------------------------- 페이지 나누기
+-- ROWNUM : 조회된 순서대로 일련번호 매김
+--          order by 구문에 index가 들어가지 않는다면 제대로된 결과를 보장하지 않음(rownum순서 뒤죽박죽)
+--          pk가 index로 사용됨 
+select rownum, bno, title from board order by bno desc;
+
+select rownum, bno, title, re_ref, re_lev, re_seq 
+from board order by re_ref desc, re_seq asc;
+
+
+-- 해결
+-- order by 구문을 먼저 실행한 후, rownum을 붙여야 함 -서브쿼리
+select rownum, bno, title, re_ref, re_lev, re_seq 
+from(select bno, title, re_ref, re_lev, re_seq 
+    from board order by re_ref desc, re_seq asc)
+where rownum <=30;
+
+-- 한 페이지에 30개의 글을 보여준다 할 때 
+-- 1 2 3 4 5 6 ......  
+-- 1 page 요청 (1~30)
+-- 2 page 요청 (31~60)
+-- 3 page 요청 (61~90) .......
+-- 서브쿼리 한 번 더 ( where 30<rownum<60 이렇게 한번에 하는게 안됨 ==> rownum<=60을 뽑고 그중에서 rownum>30을 뽑는 방식으로)
+select * 
+from (select rownum rnum, bno, title, re_ref, re_lev, re_seq 
+    from(select bno, title, re_ref, re_lev, re_seq 
+        from board order by re_ref desc, re_seq asc)
+    where rownum <=60)
+where rnum >30;
+
+
+select * 
+from (select rownum rnum, bno, title, re_ref, re_lev, re_seq 
+    from(select bno, title, re_ref, re_lev, re_seq 
+        from board order by re_ref desc, re_seq asc)
+    where rownum <= ?)
+where rnum > ?;
+-- rownum값 : 페이지번호 * 한 페이지에 보여줄 글 개수
+-- rnum값 : (페이지번호-1) * 한 페이지에 보여줄 글 개수
 
