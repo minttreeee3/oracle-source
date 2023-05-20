@@ -334,5 +334,42 @@ create table tbl_sample2(col1 varchar2(50));
 
 delete tbl_sample1;
 
+
+
+
 commit;
+
+
+
+
+ALTER TABLE membertbl MODIFY password varchar2(100);
+
+
+-- 페이지 나누기 (무조건 get방식) 
+-- ROWNUM : 조회된 순서대로 일련번호 매김
+-- spring_board : bno가 pk인 상황 (order by 기준도 bno)
+-- 1 page : 가장 최신글 20개
+-- 2 page : 그 다음 최신글 20개 
+
+insert into spring_board(bno,title,content,writer)
+(select seq_board.nextval,title,content,writer from spring_board);
+
+select count(*) from spring_board;
+
+
+-- 페이지 나누기를 할 때 필요한 sql 코드
+select *
+from(select rownum rn, bno, title, writer 
+    from (select bno, title, writer from spring_board order by bno desc)
+    where rownum <= 20)
+where rn>0; 
+
+
+-- 오라클 힌트 사용 (pk_spring_board는 bno에 줬던 제약조건명임) 
+select bno, title, writer, regdate, updatedate 
+from (select /*+INDEX_DESC(spring_board pk_spring_board)*/ rownum rn, bno, title, writer, regdate, updatedate 
+    from spring_board 
+    where rownum <= 40)
+where rn >20; 
+
 
