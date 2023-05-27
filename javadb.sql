@@ -373,3 +373,45 @@ from (select /*+INDEX_DESC(spring_board pk_spring_board)*/ rownum rn, bno, title
 where rn >20; 
 
 
+-- 댓글 테이블
+create table spring_reply(
+    rno number(10,0) constraint pk_reply primary key,   --댓글 글번호
+    bno number(10,0) not null,                          --원본글 글번호
+    reply varchar2(1000) not null,                      --댓글 내용
+    replyer varchar2(50) not null,                      --댓글 작성자
+    replydate date default sysdate,                     --댓글 작성날짜
+    constraint fk_reply_board foreign key(bno) references spring_board(bno)     --외래키 제약조건 
+);
+
+-- 댓글 테이블 수정(컬럼추가) updatedate
+ALTER TABLE spring_reply ADD updatedate date default sysdate;
+
+
+create sequence seq_reply;
+
+commit;
+
+insert into spring_reply(rno, bno, reply, replyer)
+values(seq_reply.nextval, 2301, '댓글을 달아요', 'test1');
+
+
+-- spring_reply 인덱스 추가설정
+create index idx_reply on spring_reply(bno desc, rno asc); 
+
+select rno, bno, reply, replyer, replydate, updatedate 
+from (select /*+INDEX(spring_reply idx_reply)*/ rownum rn, rno, bno, reply, replyer, replydate, updatedate
+    from spring_reply
+    where bno=2301 and rownum <= 10)
+where rn > 0; 
+
+-- spring_board 에 컬럼 추가 (댓글 수 저장)
+alter table spring_board add replycnt number default 0; 
+
+-- 이미 들어간 댓글 수 삽입
+update spring_board
+set replycnt = (select count(rno) from spring_reply where spring_board.bno = spring_reply.bno);
+
+select * from spring_board where bno = 2301;
+
+
+
