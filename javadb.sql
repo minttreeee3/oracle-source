@@ -415,3 +415,36 @@ select * from spring_board where bno = 2301;
 
 
 
+
+------------------------- 파일첨부
+-- spring_attach
+-- uuid, uploadpath, filename, filetype
+create table spring_attach(
+    uuid varchar2(100) constraint pk_attach primary key,
+    uploadpath varchar2(200) not null,
+    filename varchar2(100) not null,
+    filetype char(1) default '1',
+    bno number(10,0) not null,
+    constraint fk_board_attach foreign key(bno) references spring_board(bno)
+);
+
+
+
+-- spring_board bno와 spring_attach bno가 일치 시 
+-- title,content,writer,bno,  uuid,uploadpath,filetype,filename 가지고 나오기 
+-- inner join
+select title,content,writer, sa.bno, uuid,uploadpath,filetype,filename 
+from spring_board sb, spring_attach sa
+where sb.bno = sa.bno; 
+
+select title,content,writer, sa.bno, uuid,uploadpath,filetype,filename 
+from spring_board sb join spring_attach sa on sb.bno = sa.bno
+where sa.bno=2322;
+
+-- 어제 날짜의 첨부 목록 가져오기
+select * from spring_attach where uploadpath = TO_CHAR(sysdate-1, 'yyyy\mm\dd');
+
+
+
+
+

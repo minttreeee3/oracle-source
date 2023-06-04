@@ -102,3 +102,10 @@ DEFAULT TABLESPACE USERS
 TEMPORARY TABLESPACE TEMP;
 --권한부여
 GRANT CONNECT, RESOURCE TO test2;
+
+
+-- 권한부여/ 테이블스페이스 할당량 늘리기
+grant resource to javadb;
+ALTER USER javadb QUOTA UNLIMITED ON users;
+
+
