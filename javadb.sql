@@ -447,4 +447,71 @@ select * from spring_attach where uploadpath = TO_CHAR(sysdate-1, 'yyyy\mm\dd');
 
 
 
+-----------------------------
+--security 프로젝트에서 사용할 테이블
+--user테이블 작성 시 enabled 컬럼 추가 
+create table sp_user(
+    userid varchar2(50) primary key,
+    email varchar2(100) not null,
+    password varchar2(100) not null,
+    enabled char(1) default '1'
+);
+
+--user테이블과 관련된 권한 테이블 작성
+create table sp_user_authority(
+    userid varchar2(50) not null,
+    authority varchar2(50) not null
+);
+
+--외래키 설정 
+alter table sp_user_authority add constraint sp_suer_authority_fk foreign key(userid) references sp_user(userid);
+
+insert into sp_user(userid,email,password) values('hong123','hong123@gmail.com','1111');
+insert into sp_user_authority(userid,authority) values('hong123','ROLE_USER');
+insert into sp_user_authority(userid,authority) values('hong123','ROLE_ADMIN');
+
+commit;
+
+-- sp_user 와 sp_user_authority 를 left outer join 
+select s1.userid,email,password,enabled,authority
+from sp_user s1 left outer join sp_user_authority s2 on s1.userid = s2.userid;
+
+-- 특정 user의 정보 추출
+select s1.userid,email,password,enabled,authority
+from sp_user s1 left outer join sp_user_authority s2 on s1.userid = s2.userid 
+where s1.userid = 'hong123';
+
+-- remember-me 를 위한 테이블 작성 (반드시 이걸 만들어야함 - 테이블명과 필드명 정해져있음) 
+create table persistent_logins(
+    username varchar(64) not null,
+    series varchar(64) primary key,
+    token varchar(64) not null,
+    last_used timestamp not null
+);
+
+
+-- spring_board 연결할 user 테이블 생성 => spring_member 
+-- userid, userpw, username(성명), regdate, updatedate, enabled
+create table spring_member (
+    userid varchar2(50) primary key,
+    userpw varchar2(100) not null,
+    username varchar2(100) not null,
+    regdate date default sysdate,
+    updatedate date default sysdate,
+    enabled char(1) default '1'
+);
+
+-- spring_member 권한 테이블 생성 => spring_member_auth 
+-- userid, auth 
+create table spring_member_auth (
+    userid varchar2(50) not null, 
+    auth varchar2(50) not null,
+    constraint fk_member_auth foreign key(userid) references spring_member(userid)
+);
+
+
+
+
+
+
 
